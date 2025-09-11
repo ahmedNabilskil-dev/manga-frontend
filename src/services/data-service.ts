@@ -69,7 +69,7 @@ export async function getProject(id: string): Promise<MangaProject | null> {
     const response = await apiRequest.get<{
       success: boolean;
       data: MangaProject;
-    }>(`/manga/projects/${id}`);
+    }>(`/manga/projects/${id}/minimal`);
     return response.data;
   } catch (error: any) {
     if (error.response?.status === 404) return null;

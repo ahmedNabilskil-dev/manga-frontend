@@ -751,9 +751,6 @@ export function EnhancedProjectStructurePanel(
               )
             }
             title={projectData.title || "Untitled Project"}
-            subtitle={
-              projectData.concept ? projectData.concept : "No description"
-            }
             level={0}
             isExpanded={expandedItems.has("project")}
             onToggle={() => toggleExpanded("project")}

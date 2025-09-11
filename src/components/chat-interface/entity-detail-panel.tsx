@@ -175,32 +175,6 @@ export default function EntityDetailPanel({
   const config = getEntityConfig(entityType);
   const entityName = getEntityName(entity, entityType);
 
-  const handleAction = (action: "edit" | "delete" | "duplicate") => {
-    switch (action) {
-      case "edit":
-        onEdit?.(entity);
-        toast({
-          title: "Opening editor...",
-          description: "Redirecting to edit mode",
-        });
-        break;
-      case "delete":
-        onDelete?.(entity);
-        toast({
-          title: "Item deleted",
-          description: "Successfully removed from your collection",
-        });
-        break;
-      case "duplicate":
-        onDuplicate?.(entity);
-        toast({
-          title: "Item duplicated",
-          description: "A copy has been created",
-        });
-        break;
-    }
-  };
-
   const renderEntityDetail = () => {
     switch (entityType) {
       case "project":

@@ -1,5 +1,6 @@
 "use client";
 
+import AISettingsDialog from "@/components/ai-settings/AiSettings";
 import { AuthGuard } from "@/components/auth/auth-guard";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -18,20 +19,91 @@ import {
   Zap,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
+
+// Language definitions
+type Language = "en" | "ar";
+
+interface Translations {
+  en: {
+    [key: string]: string;
+  };
+  ar: {
+    [key: string]: string;
+  };
+}
+
+const translations: Translations = {
+  en: {
+    title: "Manga AI Agent",
+    greeting: "Hello {name}! I'm your AI manga assistant.",
+    guestGreeting: "Hello! I'm your AI manga assistant.",
+    aiStorytelling: "AI Storytelling",
+    visualGeneration: "Visual Generation",
+    mangaCreation: "Manga Creation",
+    stepByStep: "Step-by-Step Creation",
+    placeholder:
+      "Describe your manga idea... (e.g., 'A cyberpunk world where emotions are traded as currency, following a smuggler who discovers a rare emotion that could change everything...')",
+    generating: "AI is crafting your manga masterpiece...",
+    instruction: "Press Enter to send, or Shift+Enter for a new line",
+    createError:
+      "An unexpected error occurred while creating your manga project.",
+    projectCreationFailed: "Project creation failed - no project ID returned",
+  },
+  ar: {
+    title: "وكيل المانجا الذكي",
+    greeting: "أهلاً {name}! أنا مساعد المانجا الذكي بتاعك.",
+    guestGreeting: "أهلاً! أنا مساعد المانجا الذكي بتاعك.",
+    aiStorytelling: "سرد ذكي",
+    visualGeneration: "توليد بصري",
+    mangaCreation: "إنشاء مانجا",
+    stepByStep: "إنشاء خطوة بخطوة",
+    placeholder:
+      "اوصف فكرة المانجا بتاعتك... (مثال: 'عالم سايبر بانك فيه المشاعر بتتباع كعملة، وبطل القصة مهرب بيكتشف مشاعر نادرة ممكن تغير كل حاجة...')",
+    generating: "الذكي الاصطناعي بيعمل تحفة المانجا بتاعتك...",
+    instruction: "اضغط Enter للإرسال، أو Shift+Enter لسطر جديد",
+    createError: "حدث خطأ غير متوقع أثناء إنشاء مشروع المانجا.",
+    projectCreationFailed: "فشل في إنشاء المشروع - لم يتم إرجاع معرف المشروع",
+  },
+};
 
 const HomePage = () => {
   const [mangaIdea, setMangaIdea] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
   const [isInputFocused, setIsInputFocused] = useState(false);
+  const [currentLanguage, setCurrentLanguage] = useState<Language>("en");
 
-  // Debug logging
-  console.log("Component state:", {
-    isGenerating,
-    isInputFocused,
-    mangaIdeaLength: mangaIdea.length,
-  });
+  // Load language preference from localStorage
+  useEffect(() => {
+    const savedLanguage = localStorage.getItem("preferredLanguage") as Language;
+    if (savedLanguage && (savedLanguage === "en" || savedLanguage === "ar")) {
+      setCurrentLanguage(savedLanguage);
+    }
+  }, []);
+
+  // Save language preference
+  const toggleLanguage = () => {
+    const newLanguage: Language = currentLanguage === "en" ? "ar" : "en";
+    setCurrentLanguage(newLanguage);
+    localStorage.setItem("preferredLanguage", newLanguage);
+  };
+
+  // Helper function to get translated text
+  const t = (key: string, params?: { [key: string]: string }): string => {
+    let text =
+      translations[currentLanguage][key] || translations.en[key] || key;
+
+    // Replace parameters in text
+    if (params) {
+      Object.entries(params).forEach(([param, value]) => {
+        text = text.replace(`{${param}}`, value);
+      });
+    }
+
+    return text;
+  };
+
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const router = useRouter();
   const { user } = useAuthStore();
@@ -48,6 +120,7 @@ const HomePage = () => {
         data: { _id: string };
       }>("/manga/projects", {
         mangaIdea: mangaIdea.trim(),
+        language: currentLanguage, // Send language preference to backend
       });
 
       await loadCredits();
@@ -55,14 +128,12 @@ const HomePage = () => {
       if (response.data?._id) {
         router.push(`/manga-flow/${response.data._id}`);
       } else {
-        throw new Error("Project creation failed - no project ID returned");
+        throw new Error(t("projectCreationFailed"));
       }
     } catch (error: any) {
       console.error("Failed to create manga project:", error);
       const errorMsg =
-        error.response?.data?.message ||
-        error.message ||
-        "An unexpected error occurred while creating your manga project.";
+        error.response?.data?.message || error.message || t("createError");
       toast.error(errorMsg);
     } finally {
       setIsGenerating(false);
@@ -99,29 +170,44 @@ const HomePage = () => {
   const capabilities = [
     {
       icon: Brain,
-      label: "AI Storytelling",
+      label: t("aiStorytelling"),
       color: "from-blue-500 to-cyan-500",
     },
     {
       icon: Palette,
-      label: "Visual Generation",
+      label: t("visualGeneration"),
       color: "from-purple-500 to-pink-500",
     },
     {
       icon: BookOpen,
-      label: "Manga Creation",
+      label: t("mangaCreation"),
       color: "from-orange-500 to-red-500",
     },
     {
       icon: Zap,
-      label: "Step-by-Step Creation",
+      label: t("stepByStep"),
       color: "from-green-500 to-teal-500",
     },
   ];
 
+  // Get greeting text with user name
+  const getGreeting = () => {
+    if (user?.firstName) {
+      return t("greeting", { name: user.firstName });
+    }
+    return t("guestGreeting");
+  };
+
+  const isRTL = currentLanguage === "ar";
+
   return (
     <AuthGuard>
-      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-blue-950 to-indigo-950 relative overflow-hidden">
+      <div
+        className={`min-h-screen bg-gradient-to-br from-slate-950 via-blue-950 to-indigo-950 relative overflow-hidden ${
+          isRTL ? "rtl" : "ltr"
+        }`}
+        dir={isRTL ? "rtl" : "ltr"}
+      >
         <FloatingParticles />
 
         {/* Main content container */}
@@ -163,11 +249,19 @@ const HomePage = () => {
               transition={{ delay: 0.4 }}
               className="space-y-4"
             >
-              <h1 className="text-4xl md:text-6xl font-bold bg-gradient-to-r from-blue-200 via-purple-200 to-pink-200 bg-clip-text text-transparent mb-4">
-                Manga AI Agent
+              <h1
+                className={`text-4xl md:text-6xl font-bold bg-gradient-to-r from-blue-200 via-purple-200 to-pink-200 bg-clip-text text-transparent mb-4 ${
+                  isRTL ? "font-arabic" : ""
+                }`}
+              >
+                {t("title")}
               </h1>
-              <p className="text-xl md:text-2xl text-slate-300 font-light max-w-2xl mx-auto leading-relaxed">
-                Hello {user?.firstName} ! I'm your AI manga assistant.
+              <p
+                className={`text-xl md:text-2xl text-slate-300 font-light max-w-2xl mx-auto leading-relaxed ${
+                  isRTL ? "font-arabic" : ""
+                }`}
+              >
+                {getGreeting()}
               </p>
             </motion.div>
           </motion.div>
@@ -192,12 +286,17 @@ const HomePage = () => {
                 >
                   <capability.icon className="w-4 h-4 text-white" />
                 </div>
-                <span className="text-slate-300 text-sm font-medium">
+                <span
+                  className={`text-slate-300 text-sm font-medium ${
+                    isRTL ? "font-arabic" : ""
+                  }`}
+                >
                   {capability.label}
                 </span>
               </motion.div>
             ))}
           </motion.div>
+          <AISettingsDialog />
 
           {/* Chat Input Section */}
           <motion.div
@@ -223,7 +322,11 @@ const HomePage = () => {
                 <div className="absolute inset-0 bg-gradient-to-r from-blue-500/20 via-purple-500/20 to-pink-500/20 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
 
                 {/* Message icon */}
-                <div className="absolute left-6 top-6 z-20 pointer-events-none">
+                <div
+                  className={`absolute ${
+                    isRTL ? "right-6" : "left-6"
+                  } top-6 z-20 pointer-events-none`}
+                >
                   <MessageSquare className="w-6 h-6 text-slate-400" />
                 </div>
 
@@ -238,15 +341,20 @@ const HomePage = () => {
                   onBlur={() => {
                     setIsInputFocused(false);
                   }}
-                  placeholder="Describe your manga idea... (e.g., 'A cyberpunk world where emotions are traded as currency, following a smuggler who discovers a rare emotion that could change everything...')"
-                  className="w-full bg-transparent border-0 text-slate-200 placeholder:text-slate-500 pl-16 pr-24 py-6 text-lg leading-relaxed resize-none focus-visible:ring-0 min-h-[120px] cursor-text relative z-10"
+                  placeholder={t("placeholder")}
+                  className={`w-full bg-transparent border-0 text-slate-200 placeholder:text-slate-500 ${
+                    isRTL ? "pr-16 pl-24 font-arabic" : "pl-16 pr-24"
+                  } py-6 text-lg leading-relaxed resize-none focus-visible:ring-0 min-h-[120px] cursor-text relative z-10`}
                   disabled={isGenerating}
                   rows={3}
+                  dir={isRTL ? "rtl" : "ltr"}
                 />
 
                 {/* Send button */}
                 <motion.div
-                  className="absolute right-4 bottom-4 z-20 pointer-events-auto"
+                  className={`absolute ${
+                    isRTL ? "left-4" : "right-4"
+                  } bottom-4 z-20 pointer-events-auto`}
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                 >
@@ -293,7 +401,11 @@ const HomePage = () => {
                           exit={{ opacity: 0, x: 10 }}
                           className="group-hover:scale-110 transition-transform"
                         >
-                          <Send className="h-5 w-5 text-white" />
+                          <Send
+                            className={`h-5 w-5 text-white ${
+                              isRTL ? "rotate-180" : ""
+                            }`}
+                          />
                         </motion.div>
                       )}
                     </AnimatePresence>
@@ -312,14 +424,20 @@ const HomePage = () => {
                   <motion.p
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="text-slate-400 flex items-center justify-center gap-2"
+                    className={`text-slate-400 flex items-center justify-center gap-2 ${
+                      isRTL ? "font-arabic" : ""
+                    }`}
                   >
                     <Sparkles className="w-4 h-4 animate-pulse text-purple-400" />
-                    AI is crafting your manga masterpiece...
+                    {t("generating")}
                   </motion.p>
                 ) : (
-                  <p className="text-slate-500 text-sm">
-                    Press Enter to send, or Shift+Enter for a new line
+                  <p
+                    className={`text-slate-500 text-sm ${
+                      isRTL ? "font-arabic" : ""
+                    }`}
+                  >
+                    {t("instruction")}
                   </p>
                 )}
               </motion.div>

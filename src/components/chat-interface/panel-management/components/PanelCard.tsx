@@ -199,19 +199,8 @@ const PanelCard = memo<PanelCardProps>(
                 </span>
               </div>
               <div className="flex flex-wrap gap-1">
-                {panel.characters?.map((char) => (
-                  <span
-                    key={char._id}
-                    className="px-2 py-1 bg-blue-500/20 text-blue-300 rounded-lg text-xs font-medium"
-                  >
-                    {char.name}
-                  </span>
-                ))}
-                {(!panel.characters || panel.characters.length === 0) && (
-                  <span className={`${colors.textMuted} text-xs italic`}>
-                    No characters
-                  </span>
-                )}
+                {panel.characterOutfitIds?.length || 0} character
+                {panel.characterOutfitIds?.length !== 1 ? "s" : ""}
               </div>
             </div>
 

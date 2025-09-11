@@ -7,7 +7,7 @@
   .responsive-bg-image {
     background-size: cover;
   }
-  
+
   @media (max-width: 768px) {
     .responsive-bg-image {
       background-size: contain;
@@ -108,18 +108,18 @@ body {
   .main-content {
     min-height: calc(100vh - 4rem); /* 4rem = 64px top navigation height */
   }
-  
+
   /* Utility for full height content accounting for navigation */
   .content-height {
     height: calc(100vh - 4rem);
   }
-  
+
   /* Utility for dialog max height to prevent overflow */
   .dialog-content {
     max-height: calc(100vh - 2rem);
     overflow-y: auto;
   }
-  
+
   /* Utility for mobile-friendly dialog heights */
   .dialog-mobile {
     max-height: calc(100vh - 1rem);
@@ -128,7 +128,6 @@ body {
 }
 
 /* Add React Flow styles */
-
 
 /* Ensure React Flow elements adapt to dark mode */
 .dark .react-flow__background {
