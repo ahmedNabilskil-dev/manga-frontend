@@ -199,7 +199,7 @@ export default function SceneDetailView({ scene }: { scene: Scene }) {
                     },
                     {
                       label: "Order",
-                      value: scene.order.toString(),
+                      value: scene.order?.toString(),
                       icon: <Layers className="w-5 h-5" />,
                     },
                     {

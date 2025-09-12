@@ -1,12 +1,10 @@
 import { useTranslation } from "next-i18next";
-import { useRouter } from "next/router";
 
 export default function LanguageSwitcher() {
   const { i18n, t } = useTranslation("common");
-  const router = useRouter();
 
   const changeLanguage = (lng: string) => {
-    router.push(router.pathname, router.asPath, { locale: lng });
+    console.log(lng);
   };
 
   return (

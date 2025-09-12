@@ -2,7 +2,6 @@ import { ConditionalTopNavigation } from "@/components/layout/conditional-top-na
 import { AuthProvider } from "@/components/providers/auth-provider";
 import { ReactQueryProvider } from "@/components/providers/react-query-provider";
 import { ThemeProvider } from "@/components/providers/theme-provider"; // Import the ThemeProvider
-import LanguageSwitcher from "@/components/ui/LanguageSwitcher";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import "@/lib/axios-config";
@@ -61,7 +60,6 @@ export default function RootLayout({
             <AuthProvider>
               <TooltipProvider>
                 <ConditionalTopNavigation />
-                <LanguageSwitcher />
                 {children}
               </TooltipProvider>
             </AuthProvider>
