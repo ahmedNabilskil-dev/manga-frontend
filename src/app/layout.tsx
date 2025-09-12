@@ -1,7 +1,8 @@
 import { ConditionalTopNavigation } from "@/components/layout/conditional-top-navigation";
 import { AuthProvider } from "@/components/providers/auth-provider";
-import { ReactQueryProvider } from "@/components/providers/react-query-provider"; // Create this provider
+import { ReactQueryProvider } from "@/components/providers/react-query-provider";
 import { ThemeProvider } from "@/components/providers/theme-provider"; // Import the ThemeProvider
+import LanguageSwitcher from "@/components/ui/LanguageSwitcher";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import "@/lib/axios-config";
@@ -39,11 +40,15 @@ export const metadata: Metadata = {
 
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
+}) {
+  // TODO: Integrate locale from Next.js routing
+  const locale: string = "en";
+  const dir = locale === "ar" ? "rtl" : "ltr";
+
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang={locale} dir={dir} suppressHydrationWarning>
       {/* suppressHydrationWarning is recommended by next-themes */}
       <body className={`${inter.className} antialiased`}>
         <ThemeProvider
@@ -56,6 +61,7 @@ export default function RootLayout({
             <AuthProvider>
               <TooltipProvider>
                 <ConditionalTopNavigation />
+                <LanguageSwitcher />
                 {children}
               </TooltipProvider>
             </AuthProvider>

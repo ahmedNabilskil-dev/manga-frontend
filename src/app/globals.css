@@ -15,8 +15,17 @@
   }
 }
 
+
 body {
   font-family: "Inter", sans-serif; /* Using Inter for a clean modern look */
+}
+
+/* RTL base styles */
+[dir="rtl"] {
+  direction: rtl;
+}
+[dir="rtl"] * {
+  text-align: right;
 }
 
 @layer base {
