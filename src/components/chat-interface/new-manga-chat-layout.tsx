@@ -2175,6 +2175,16 @@ export default function NewMangaChatLayout() {
     }
   }, [sessionId, toast]);
 
+  // Handle sending message from panel form to main chat
+  const handleSendChatMessage = useCallback((message: string) => {
+    if (!message.trim()) return;
+    setInput(message);
+    // Auto-focus the input area
+    setTimeout(() => {
+      textareaRef.current?.focus();
+    }, 100);
+  }, []);
+
   // Form submission handler
   const handleSubmit = useCallback(
     async (e: React.FormEvent) => {
@@ -2640,6 +2650,8 @@ export default function NewMangaChatLayout() {
         onClose={() => setManualPanelDialog(false)}
         project={projectData}
         reloadProject={loadProject}
+        isLoading={isLoading}
+        onSendChatMessage={handleSendChatMessage}
       />
 
       <EntityDetailPanel

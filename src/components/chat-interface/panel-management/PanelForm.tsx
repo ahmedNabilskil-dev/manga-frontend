@@ -7,6 +7,10 @@ import LocationSelector from "./components/panel-form/LocationSelector";
 import PanelDescription from "./components/panel-form/PanelDescription";
 import { usePanelForm } from "./hooks";
 import { PanelFormProps } from "./types";
+import {
+  findPanelContextByScene,
+  generatePanelImageMessage,
+} from "./utils/panel-context";
 
 const PanelForm = memo<PanelFormProps>(
   ({
@@ -19,6 +23,7 @@ const PanelForm = memo<PanelFormProps>(
     colors,
     isSaving,
     selectedSceneId = "",
+    onSendChatMessage,
   }) => {
     const [activeTab, setActiveTab] = useState<"panel" | "dialogs" | "image">(
       "panel"
@@ -76,13 +81,42 @@ const PanelForm = memo<PanelFormProps>(
     }, [onSave, panelData]);
 
     const handleGenerateImage = useCallback(() => {
-      // Simulate image generation - this should update the panel's imgUrl, not dialog
-      // For now, we'll just set a placeholder - this should be replaced with actual image generation logic
-      setTimeout(() => {
-        // This would normally update the panel's imgUrl through a different mechanism
-        console.log("Generating image...");
-      }, 1000);
-    }, []);
+      // Generate contextual message for panel image generation
+      if (!onSendChatMessage || !projectData) {
+        console.log(
+          "Cannot generate image: missing chat callback or project data"
+        );
+        return;
+      }
+
+      // Find panel context based on scene and current panel order
+      const panelOrder = editingPanel?.order ?? insertAfterIndex;
+      const sceneId = panelData.sceneId || selectedSceneId;
+
+      const context = findPanelContextByScene(projectData, sceneId, panelOrder);
+      if (!context) {
+        console.log("Cannot find panel context for image generation");
+        return;
+      }
+
+      // Generate the message with context and description
+      const message = generatePanelImageMessage(context);
+
+      // Send the message to the main chat
+      onSendChatMessage(message);
+
+      // Close the panel form to allow user to see the chat
+      onClose();
+    }, [
+      onSendChatMessage,
+      projectData,
+      editingPanel,
+      insertAfterIndex,
+      panelData.sceneId,
+      panelData.description,
+      selectedSceneId,
+      onClose,
+    ]);
 
     const isFormValid =
       panelData.description.trim() !== "" &&
@@ -205,48 +239,52 @@ const PanelForm = memo<PanelFormProps>(
                 colors={colors}
                 onUpdateDialogConfig={updateDialogConfig}
                 onGenerateImage={handleGenerateImage}
+                projectData={projectData}
+                onSendChatMessage={onSendChatMessage}
               />
             )}
           </div>
 
           {/* Modal Footer */}
-          <div className="p-3 sm:p-6 border-t border-gray-700/50 flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3">
-            <div className="flex items-center gap-2 justify-center sm:justify-start">
-              <span
-                className={`${colors.textMuted} text-xs sm:text-sm text-center sm:text-left`}
-              >
-                {editingPanel
-                  ? "Editing existing panel"
-                  : `Panel will be added after Panel ${insertAfterIndex + 1}`}
-              </span>
-            </div>
+          {activeTab != "image" && (
+            <div className="p-3 sm:p-6 border-t border-gray-700/50 flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3">
+              <div className="flex items-center gap-2 justify-center sm:justify-start">
+                <span
+                  className={`${colors.textMuted} text-xs sm:text-sm text-center sm:text-left`}
+                >
+                  {editingPanel
+                    ? "Editing existing panel"
+                    : `Panel will be added after Panel ${insertAfterIndex + 1}`}
+                </span>
+              </div>
 
-            <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
-              <button
-                onClick={onClose}
-                className={`px-4 sm:px-6 py-2 sm:py-3 ${colors.panelBg} ${colors.border} border-2 rounded-xl font-medium ${colors.textSecondary} hover:${colors.text} transition-all duration-200 text-sm order-2 sm:order-1`}
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleSave}
-                disabled={!isFormValid || isSaving}
-                className="px-4 sm:px-8 py-2 sm:py-3 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 disabled:from-gray-600 disabled:to-gray-700 text-white font-bold rounded-xl transition-all duration-200 hover:scale-105 disabled:scale-100 shadow-lg hover:shadow-xl flex items-center justify-center gap-2 text-sm order-1 sm:order-2"
-              >
-                {isSaving ? (
-                  <>
-                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                    {editingPanel ? "Updating..." : "Creating..."}
-                  </>
-                ) : (
-                  <>
-                    <Save className="w-4 h-4" />
-                    {editingPanel ? "Update Panel" : "Create Panel"}
-                  </>
-                )}
-              </button>
+              <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
+                <button
+                  onClick={onClose}
+                  className={`px-4 sm:px-6 py-2 sm:py-3 ${colors.panelBg} ${colors.border} border-2 rounded-xl font-medium ${colors.textSecondary} hover:${colors.text} transition-all duration-200 text-sm order-2 sm:order-1`}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleSave}
+                  disabled={!isFormValid || isSaving}
+                  className="px-4 sm:px-8 py-2 sm:py-3 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 disabled:from-gray-600 disabled:to-gray-700 text-white font-bold rounded-xl transition-all duration-200 hover:scale-105 disabled:scale-100 shadow-lg hover:shadow-xl flex items-center justify-center gap-2 text-sm order-1 sm:order-2"
+                >
+                  {isSaving ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                      {editingPanel ? "Updating..." : "Creating..."}
+                    </>
+                  ) : (
+                    <>
+                      <Save className="w-4 h-4" />
+                      {editingPanel ? "Update Panel" : "Create Panel"}
+                    </>
+                  )}
+                </button>
+              </div>
             </div>
-          </div>
+          )}
         </div>
       </div>
     );

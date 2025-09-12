@@ -21,6 +21,7 @@ import React, {
   useRef,
   useState,
 } from "react";
+import { ChatMessagePreview } from "../../../ChatMessagePreview";
 
 interface PanelImageEditChatProps {
   entityType: string;
@@ -166,6 +167,43 @@ const EditMessageComponent = ({
 };
 
 // ============================================================================
+// IMAGE PREVIEW DIALOG COMPONENT
+// ============================================================================
+
+interface ImagePreviewDialogProps {
+  src: string | undefined;
+  onClose: () => void;
+}
+
+const ImagePreviewDialog = ({ src, onClose }: ImagePreviewDialogProps) => {
+  if (!src) return null;
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-70"
+      onClick={onClose}
+    >
+      <div
+        className="relative max-w-3xl max-h-[90vh] p-4 bg-white dark:bg-gray-900 rounded-xl shadow-2xl flex flex-col items-center"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <img
+          src={src}
+          alt="Preview"
+          className="max-w-full max-h-[80vh] rounded-lg border border-gray-200 dark:border-gray-700"
+        />
+        <button
+          onClick={onClose}
+          className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+        >
+          Close
+        </button>
+      </div>
+    </div>
+  );
+};
+
+// ============================================================================
 // WAITING RESPONSE LOADING COMPONENT
 // ============================================================================
 
@@ -255,6 +293,11 @@ const PanelImageEditChat = React.memo(function PanelImageEditChat({
     originalContent: string;
     isLoading: boolean;
   }>({ messageId: null, originalContent: "", isLoading: false });
+
+  // Image preview state
+  const [previewImageSrc, setPreviewImageSrc] = useState<string | undefined>(
+    undefined
+  );
 
   const { toast } = useToast();
   const { user } = useAuthStore();
@@ -706,9 +749,18 @@ const PanelImageEditChat = React.memo(function PanelImageEditChat({
                       />
                     ) : (
                       <>
-                        <div className="text-sm whitespace-pre-wrap">
-                          {msg.content}
-                        </div>
+                        {/* Image/file preview */}
+                        <ChatMessagePreview
+                          message={msg}
+                          onPreviewImage={setPreviewImageSrc}
+                        />
+
+                        {/* Message content */}
+                        {msg.content && (
+                          <div className="text-sm whitespace-pre-wrap">
+                            {msg.content}
+                          </div>
+                        )}
 
                         {/* Error retry button */}
                         {isError && msg.metadata?.retryMessageId && (
@@ -828,6 +880,12 @@ const PanelImageEditChat = React.memo(function PanelImageEditChat({
           {entityDisplayInfo}
         </div>
       </div>
+
+      {/* Image Preview Dialog */}
+      <ImagePreviewDialog
+        src={previewImageSrc}
+        onClose={() => setPreviewImageSrc(undefined)}
+      />
     </div>
   );
 });

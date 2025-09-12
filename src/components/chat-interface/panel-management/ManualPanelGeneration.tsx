@@ -23,6 +23,7 @@ const ManualPanelGeneration = memo<ManualPanelGeneratorProps>(
     project,
     reloadProject,
     isLoading,
+    onSendChatMessage,
   }) => {
     // State management
     const [selectedChapter, setSelectedChapter] = useState<string>(
@@ -457,6 +458,10 @@ const ManualPanelGeneration = memo<ManualPanelGeneratorProps>(
           colors={colors}
           isSaving={isSaving}
           selectedSceneId={selectedScene}
+          onSendChatMessage={(message: string) => {
+            onSendChatMessage?.(message);
+            onClose();
+          }}
         />
       </div>
     );

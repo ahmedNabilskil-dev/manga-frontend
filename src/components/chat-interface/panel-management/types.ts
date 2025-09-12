@@ -14,6 +14,7 @@ export interface ManualPanelGeneratorProps {
   project: MangaProject | null;
   reloadProject: () => Promise<void>;
   isLoading: boolean;
+  onSendChatMessage?: (message: string) => void;
 }
 
 export interface PanelFormData {
@@ -54,6 +55,7 @@ export interface PanelFormProps {
   colors: any;
   isSaving: boolean;
   selectedSceneId?: string;
+  onSendChatMessage?: (message: string) => void;
 }
 
 export interface CharacterSelectorProps {
@@ -89,4 +91,6 @@ export interface ImageSetupProps {
   colors: any;
   onUpdateDialogConfig: (index: number, config: any) => void;
   onGenerateImage: () => void;
+  projectData: MangaProject | null;
+  onSendChatMessage?: (message: string) => void;
 }
