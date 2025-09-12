@@ -1,14 +1,13 @@
 import {
   createPanelWithDialogues,
   deletePanel,
-  getProjectWithRelations as getProjectWithDetails,
   updatePanelWithDialogues,
   updatePanelWithRenderedImage,
   type CreatePanelWithDialoguesDto,
   type PanelDialogueDto,
   type UpdatePanelWithDialoguesDto,
 } from "@/services/data-service";
-import { Chapter, MangaProject, Panel, Scene } from "@/types/entities";
+import { Chapter, Panel, Scene } from "@/types/entities";
 import { BookOpen, ChevronDown, Edit2, Eye, X } from "lucide-react";
 import { memo, useCallback, useEffect, useState } from "react";
 import PanelCard from "./components/PanelCard";
@@ -18,12 +17,20 @@ import PanelForm from "./PanelForm";
 import { ManualPanelGeneratorProps, PanelFormData } from "./types";
 
 const ManualPanelGeneration = memo<ManualPanelGeneratorProps>(
-  ({ isOpen = true, onClose = () => {}, projectId = "project1" }) => {
+  ({
+    isOpen = true,
+    onClose = () => {},
+    project,
+    reloadProject,
+    isLoading,
+  }) => {
     // State management
-    const [projectData, setProjectData] = useState<MangaProject | null>(null);
-    const [isLoading, setIsLoading] = useState<boolean>(true);
-    const [selectedChapter, setSelectedChapter] = useState<string>("");
-    const [selectedScene, setSelectedScene] = useState<string>("");
+    const [selectedChapter, setSelectedChapter] = useState<string>(
+      project?.chapters?.[0]?._id || ""
+    );
+    const [selectedScene, setSelectedScene] = useState<string>(
+      project?.chapters?.[0]?.scenes?.[0]?._id || ""
+    );
     const [mode, setMode] = useState<"edit" | "preview">("edit");
     const [darkMode] = useState<boolean>(true);
 
@@ -43,46 +50,10 @@ const ManualPanelGeneration = memo<ManualPanelGeneratorProps>(
       updateDialogueConfig: updateManagedDialogueConfig,
     } = usePanelDialogManagement([]);
 
-    // Fetch project data
-    const fetchProjectData = async (
-      selectedChapterId?: string,
-      selectedSceneId?: string,
-      initialLoading: boolean = true
-    ) => {
-      if (!isOpen) return;
-
-      setIsLoading(initialLoading);
-      try {
-        const data = await getProjectWithDetails(projectId);
-        if (data) {
-          setProjectData(data);
-          // Set first chapter as default
-          if (data.chapters && data.chapters.length > 0) {
-            setSelectedChapter(selectedChapterId || data.chapters[0]._id || "");
-            // Set first scene as default when chapter is selected
-            if (data.chapters[0].scenes && data.chapters[0].scenes.length > 0) {
-              setSelectedScene(
-                selectedSceneId || data.chapters[0].scenes[0]._id || ""
-              );
-            }
-          }
-        }
-      } catch (error) {
-        console.error("Failed to load project:", error);
-        setProjectData(null);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    useEffect(() => {
-      fetchProjectData();
-    }, [projectId, isOpen]);
-
     // Update managed panels when chapter or scene changes
     useEffect(() => {
-      if (projectData && selectedChapter && selectedScene) {
-        const chapter = projectData.chapters?.find(
+      if (project && selectedChapter && selectedScene) {
+        const chapter = project.chapters?.find(
           (c: Chapter) => c._id === selectedChapter
         );
         if (chapter) {
@@ -111,12 +82,12 @@ const ManualPanelGeneration = memo<ManualPanelGeneratorProps>(
           }
         }
       }
-    }, [selectedChapter, selectedScene, projectData, setManagedPanels]);
+    }, [selectedChapter, selectedScene, project, setManagedPanels]);
 
     // Update selected scene when chapter changes
     useEffect(() => {
-      if (projectData && selectedChapter) {
-        const chapter = projectData.chapters?.find(
+      if (project && selectedChapter) {
+        const chapter = project.chapters?.find(
           (c: Chapter) => c._id === selectedChapter
         );
         if (chapter && chapter.scenes && chapter.scenes.length > 0) {
@@ -125,7 +96,7 @@ const ManualPanelGeneration = memo<ManualPanelGeneratorProps>(
           setSelectedScene("");
         }
       }
-    }, [selectedChapter, projectData]);
+    }, [selectedChapter, project]);
 
     // Panel management functions
     const handleAddPanel = useCallback((afterIndex: number) => {
@@ -171,7 +142,7 @@ const ManualPanelGeneration = memo<ManualPanelGeneratorProps>(
           await updatePanelWithRenderedImage(updatedPanel._id, updateDto);
 
           // Refresh project data to get updated panel info
-          await fetchProjectData(selectedChapter, selectedScene, false);
+          await reloadProject();
         } catch (error) {
           console.error("Failed to update panel from canvas:", error);
         }
@@ -183,7 +154,7 @@ const ManualPanelGeneration = memo<ManualPanelGeneratorProps>(
       async (panelId: string): Promise<void> => {
         try {
           await deletePanel(panelId);
-          await fetchProjectData(selectedChapter, selectedScene, false);
+          await reloadProject();
         } catch (error) {
           console.error("Failed to delete panel:", error);
           throw error; // Re-throw to let PanelCard handle the error
@@ -240,7 +211,7 @@ const ManualPanelGeneration = memo<ManualPanelGeneratorProps>(
         } catch (error) {
           console.error("Failed to save panel:", error);
         } finally {
-          await fetchProjectData(selectedChapter, selectedScene, false);
+          await reloadProject();
           setIsSaving(false);
           setShowPanelForm(false);
           setEditingPanel(null);
@@ -252,7 +223,7 @@ const ManualPanelGeneration = memo<ManualPanelGeneratorProps>(
         insertAfterOrder,
         selectedScene, // Add selectedScene as dependency
         setManagedPanels,
-        projectData?.characters,
+        project?.characters,
       ]
     );
 
@@ -278,7 +249,7 @@ const ManualPanelGeneration = memo<ManualPanelGeneratorProps>(
       );
     }
 
-    if (!projectData) {
+    if (!project) {
       return (
         <div
           className={`fixed inset-0 ${colors.bg} z-50 flex items-center justify-center`}
@@ -321,7 +292,7 @@ const ManualPanelGeneration = memo<ManualPanelGeneratorProps>(
                 </div>
                 <div>
                   <h1 className={`text-lg md:text-xl font-bold ${colors.text}`}>
-                    {projectData.title}
+                    {project.title}
                   </h1>
                   <p className={`${colors.textMuted} text-xs md:text-sm`}>
                     Manual Panel Generation
@@ -373,7 +344,7 @@ const ManualPanelGeneration = memo<ManualPanelGeneratorProps>(
                   className={`w-full px-3 py-2 ${colors.panelBg} ${colors.border} border rounded-xl ${colors.text} focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition-all duration-200 text-sm`}
                 >
                   <option value="">Select Chapter</option>
-                  {projectData.chapters?.map((chapter: Chapter) => (
+                  {project.chapters?.map((chapter: Chapter) => (
                     <option key={chapter._id} value={chapter._id}>
                       {chapter.title} ({chapter.scenes?.length || 0} scenes)
                     </option>
@@ -389,7 +360,7 @@ const ManualPanelGeneration = memo<ManualPanelGeneratorProps>(
                 >
                   <option value="">Select Scene</option>
                   {selectedChapter &&
-                    projectData.chapters
+                    project.chapters
                       ?.find((c: Chapter) => c._id === selectedChapter)
                       ?.scenes?.map((scene: Scene, index: number) => (
                         <option key={scene._id} value={scene._id}>
@@ -449,7 +420,7 @@ const ManualPanelGeneration = memo<ManualPanelGeneratorProps>(
                       index={index}
                       mode={mode}
                       colors={colors}
-                      projectData={projectData}
+                      projectData={project}
                       onEdit={handleEditPanel}
                       onCanvasUpdate={handleCanvasUpdate}
                       onDelete={handleDeletePanel}
@@ -482,7 +453,7 @@ const ManualPanelGeneration = memo<ManualPanelGeneratorProps>(
           onSave={handleSavePanel}
           editingPanel={editingPanel}
           insertAfterIndex={insertAfterOrder}
-          projectData={projectData}
+          projectData={project}
           colors={colors}
           isSaving={isSaving}
           selectedSceneId={selectedScene}

@@ -2638,7 +2638,8 @@ export default function NewMangaChatLayout() {
       <ManualPanelGeneration
         isOpen={manualPanelDialog}
         onClose={() => setManualPanelDialog(false)}
-        projectId={projectId}
+        project={projectData}
+        reloadProject={loadProject}
       />
 
       <EntityDetailPanel

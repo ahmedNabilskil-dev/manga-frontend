@@ -11,7 +11,9 @@ export type { PanelDialogue } from "@/types/entities";
 export interface ManualPanelGeneratorProps {
   isOpen?: boolean;
   onClose?: () => void;
-  projectId?: string;
+  project: MangaProject | null;
+  reloadProject: () => Promise<void>;
+  isLoading: boolean;
 }
 
 export interface PanelFormData {
