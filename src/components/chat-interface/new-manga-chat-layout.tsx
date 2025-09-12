@@ -1613,11 +1613,11 @@ export default function NewMangaChatLayout() {
   });
   const [entityDetailPanel, setEntityDetailPanel] = useState<{
     isOpen: boolean;
-    entity: DetailableEntity | null;
+    entityId: string | null;
     entityType: string | null;
   }>({
     isOpen: false,
-    entity: null,
+    entityId: null,
     entityType: null,
   });
   const [manualPanelDialog, setManualPanelDialog] = useState(false);
@@ -1709,9 +1709,22 @@ export default function NewMangaChatLayout() {
 
   const handleEntityDetailView = useCallback(
     (entity: DetailableEntity, entityType: string) => {
+      // Extract the entity ID based on the entity type
+      let entityId: string | null = null;
+
+      if (entity && typeof entity === "object") {
+        // Try different possible ID fields
+        entityId = (entity as any)._id || (entity as any).id;
+      }
+
+      if (!entityId) {
+        console.error("Could not extract entity ID from entity:", entity);
+        return;
+      }
+
       setEntityDetailPanel({
         isOpen: true,
-        entity,
+        entityId,
         entityType,
       });
     },
@@ -1721,7 +1734,7 @@ export default function NewMangaChatLayout() {
   const handleEntityDetailClose = useCallback(() => {
     setEntityDetailPanel({
       isOpen: false,
-      entity: null,
+      entityId: null,
       entityType: null,
     });
   }, []);
@@ -2576,7 +2589,7 @@ export default function NewMangaChatLayout() {
       />
 
       <EntityDetailPanel
-        entity={entityDetailPanel.entity}
+        entityId={entityDetailPanel.entityId}
         entityType={entityDetailPanel.entityType as any}
         isOpen={entityDetailPanel.isOpen}
         onClose={handleEntityDetailClose}

@@ -78,6 +78,24 @@ export async function getProject(id: string): Promise<MangaProject | null> {
   }
 }
 
+export async function getProjectDetails(
+  id: string
+): Promise<MangaProject | null> {
+  try {
+    const response = await apiRequest.get<{
+      success: boolean;
+      data: MangaProject;
+    }>(`/manga/projects/${id}`);
+    return response.data;
+  } catch (error: any) {
+    if (error.response?.status === 404) return null;
+    console.error("Get project details error:", error);
+    throw new Error(
+      error.response?.data?.message || "Failed to fetch project details"
+    );
+  }
+}
+
 export async function createProject(mangaIdea: string): Promise<MangaProject> {
   try {
     const response = await apiRequest.post<{
@@ -126,7 +144,7 @@ export async function deleteProject(id: string): Promise<void> {
 export async function getProjectWithRelations(
   id: string
 ): Promise<MangaProject | null> {
-  return getProject(id);
+  return getProjectDetails(id);
 }
 
 // Panel Preview Types

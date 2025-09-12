@@ -18,12 +18,25 @@ import {
   Eye,
   FileText,
   Layers,
+  Loader2,
   MapPin,
   Shirt,
   Sparkles,
   User,
   X,
 } from "lucide-react";
+import { useEffect, useState } from "react";
+
+// Import data service methods
+import {
+  getChapterForContext,
+  getCharacterForContext,
+  getCharacterOutfitTemplate,
+  getLocationTemplate,
+  getPanelForContext,
+  getProjectDetails,
+  getSceneForContext,
+} from "@/services/data-service";
 
 // Import the separated entity views
 import ChapterDetailView from "./entity-views/ChapterDetailView";
@@ -48,7 +61,7 @@ export type DetailableEntity =
   | LocationTemplate;
 
 export interface EntityDetailPanelProps {
-  entity: DetailableEntity | null;
+  entityId: string | null;
   entityType:
     | "character"
     | "chapter"
@@ -160,7 +173,7 @@ const getEntityName = (
 // ============================================================================
 
 export default function EntityDetailPanel({
-  entity,
+  entityId,
   entityType,
   isOpen,
   onClose,
@@ -169,11 +182,167 @@ export default function EntityDetailPanel({
   onDuplicate,
 }: EntityDetailPanelProps) {
   const { toast } = useToast();
+  const [entity, setEntity] = useState<DetailableEntity | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  if (!entity || !entityType || !isOpen) return null;
+  // Fetch entity data when entityId or entityType changes
+  useEffect(() => {
+    if (!entityId || !entityType || !isOpen) {
+      setEntity(null);
+      setError(null);
+      return;
+    }
+
+    const fetchEntityData = async () => {
+      setLoading(true);
+      setError(null);
+
+      try {
+        let fetchedEntity: DetailableEntity | null = null;
+
+        switch (entityType) {
+          case "project":
+            fetchedEntity = await getProjectDetails(entityId);
+            break;
+          case "character":
+            fetchedEntity = await getCharacterForContext(entityId);
+            break;
+          case "chapter":
+            fetchedEntity = await getChapterForContext(entityId);
+            break;
+          case "scene":
+            fetchedEntity = await getSceneForContext(entityId);
+            break;
+          case "panel":
+            fetchedEntity = await getPanelForContext(entityId);
+            break;
+          case "outfit":
+            fetchedEntity = await getCharacterOutfitTemplate(entityId);
+            break;
+          case "location":
+            fetchedEntity = await getLocationTemplate(entityId);
+            break;
+          default:
+            throw new Error(`Unknown entity type: ${entityType}`);
+        }
+
+        if (!fetchedEntity) {
+          throw new Error(`${entityType} not found`);
+        }
+
+        setEntity(fetchedEntity);
+      } catch (err: any) {
+        console.error(`Error fetching ${entityType}:`, err);
+        setError(err.message || `Failed to fetch ${entityType} details`);
+        toast({
+          title: "Error",
+          description: `Failed to load ${entityType} details. Please try again.`,
+          variant: "destructive",
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchEntityData();
+  }, [entityId, entityType, isOpen, toast]);
+
+  if (!entityId || !entityType || !isOpen) return null;
 
   const config = getEntityConfig(entityType);
-  const entityName = getEntityName(entity, entityType);
+  const entityName = entity ? getEntityName(entity, entityType) : "Loading...";
+
+  // Loading state
+  if (loading) {
+    return (
+      <AnimatePresence>
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 z-50 bg-gradient-to-br from-black/60 via-black/40 to-black/60 backdrop-blur-xl"
+          onClick={onClose}
+        >
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9, y: 50 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.9, y: 50 }}
+            transition={{
+              type: "spring",
+              damping: 25,
+              stiffness: 200,
+              mass: 0.8,
+            }}
+            className="fixed inset-0 lg:inset-8 bg-white/95 dark:bg-gray-900/95 lg:rounded-3xl overflow-hidden shadow-2xl border border-white/20 dark:border-gray-700/50 backdrop-blur-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="h-full flex items-center justify-center">
+              <div className="text-center">
+                <Loader2 className="w-12 h-12 mx-auto mb-4 animate-spin text-gray-600 dark:text-gray-400" />
+                <p className="text-xl font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                  Loading {config.name} Details
+                </p>
+                <p className="text-gray-500 dark:text-gray-400">
+                  Please wait while we fetch the information...
+                </p>
+              </div>
+            </div>
+          </motion.div>
+        </motion.div>
+      </AnimatePresence>
+    );
+  }
+
+  // Error state
+  if (error || !entity) {
+    return (
+      <AnimatePresence>
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 z-50 bg-gradient-to-br from-black/60 via-black/40 to-black/60 backdrop-blur-xl"
+          onClick={onClose}
+        >
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9, y: 50 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.9, y: 50 }}
+            transition={{
+              type: "spring",
+              damping: 25,
+              stiffness: 200,
+              mass: 0.8,
+            }}
+            className="fixed inset-0 lg:inset-8 bg-white/95 dark:bg-gray-900/95 lg:rounded-3xl overflow-hidden shadow-2xl border border-white/20 dark:border-gray-700/50 backdrop-blur-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="h-full flex items-center justify-center">
+              <div className="text-center max-w-md mx-auto p-6">
+                <div className="w-16 h-16 mx-auto mb-4 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center">
+                  <X className="w-8 h-8 text-red-600 dark:text-red-400" />
+                </div>
+                <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+                  Failed to Load {config.name}
+                </h3>
+                <p className="text-gray-600 dark:text-gray-400 mb-6">
+                  {error ||
+                    `Unable to fetch ${entityType} details. The ${entityType} may not exist or there was a network issue.`}
+                </p>
+                <Button
+                  onClick={onClose}
+                  className="bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white"
+                >
+                  Close
+                </Button>
+              </div>
+            </div>
+          </motion.div>
+        </motion.div>
+      </AnimatePresence>
+    );
+  }
 
   const renderEntityDetail = () => {
     switch (entityType) {
