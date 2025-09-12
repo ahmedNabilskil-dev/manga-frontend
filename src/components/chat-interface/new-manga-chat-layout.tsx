@@ -118,7 +118,6 @@ const EditMessageComponent = ({
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const isMobile = useIsMobile();
 
-  // Reset content when originalContent changes (different message being edited)
   useEffect(() => {
     setEditContent(originalContent);
   }, [originalContent]);
@@ -127,8 +126,9 @@ const EditMessageComponent = ({
     if (textareaRef.current) {
       textareaRef.current.focus();
       // Auto-resize textarea
-      textareaRef.current.style.height = "auto";
-      textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
+      const textarea = textareaRef.current;
+      textarea.style.height = "auto";
+      textarea.style.height = `${textarea.scrollHeight}px`;
     }
   }, []);
 
@@ -157,80 +157,109 @@ const EditMessageComponent = ({
   };
 
   return (
-    <div className="space-y-3">
-      <form onSubmit={handleSubmit}>
+    <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-3">
+      {/* Compact header */}
+      <div className="flex items-center gap-1.5">
+        <div className="w-1.5 h-1.5 rounded-full bg-blue-500"></div>
+        <span className="text-xs font-medium text-gray-600 dark:text-gray-400">
+          Editing
+        </span>
+      </div>
+
+      <form onSubmit={handleSubmit} className="">
+        {/* Minimal textarea */}
         <textarea
           ref={textareaRef}
           value={editContent}
           onChange={handleChange}
           onKeyDown={handleKeyDown}
           className={cn(
-            "w-full resize-none bg-white dark:bg-gray-800 border-2 border-blue-200 dark:border-blue-700 rounded-lg focus:outline-none focus:border-blue-500 dark:focus:border-blue-400 text-gray-900 dark:text-gray-100 transition-colors",
-            isMobile
-              ? "p-3 text-sm min-h-[80px]"
-              : "p-4 text-base min-h-[100px]"
+            "w-full resize-none bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-md transition-colors",
+            "focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent",
+            "text-gray-900 dark:text-gray-100 placeholder-gray-400",
+            isMobile ? "p-2 text-sm min-h-[80px]" : "p-3 text-sm min-h-[100px]"
           )}
-          placeholder="Edit your message..."
+          placeholder="Edit message..."
           disabled={isLoading}
         />
 
-        <div className="flex items-center justify-end gap-2 mt-3">
-          <button
-            type="button"
-            onClick={onCancel}
-            disabled={isLoading}
-            className={cn(
-              "px-4 py-2 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-medium",
-              isMobile ? "text-sm" : "text-base"
-            )}
-          >
-            Cancel
-          </button>
+        {/* Compact action bar */}
+        <div className="flex items-center justify-between">
+          {/* Keyboard shortcuts - only show on desktop */}
+          {!isMobile && (
+            <div className="text-xs text-gray-500 dark:text-gray-400">
+              <kbd className="px-1 py-0.5 bg-gray-100 dark:bg-gray-800 rounded text-xs">
+                ⏎
+              </kbd>{" "}
+              save •{" "}
+              <kbd className="px-1 py-0.5 bg-gray-100 dark:bg-gray-800 rounded text-xs">
+                esc
+              </kbd>{" "}
+              cancel
+            </div>
+          )}
 
-          <motion.button
-            type="submit"
-            disabled={!editContent.trim() || isLoading}
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            className={cn(
-              "flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 disabled:from-gray-400 disabled:to-gray-500 text-white rounded-lg transition-colors disabled:cursor-not-allowed font-medium",
-              isMobile ? "text-sm" : "text-base"
-            )}
-          >
-            {isLoading ? (
-              <>
-                <motion.div
-                  animate={{ rotate: 360 }}
-                  transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                  className="w-4 h-4"
-                >
-                  <Zap className="w-4 h-4" />
-                </motion.div>
-                {!isMobile && "Sending..."}
-              </>
-            ) : (
-              <>
-                <Send className="w-4 h-4" />
-                {!isMobile && "Update"}
-              </>
-            )}
-          </motion.button>
+          {/* Mobile: show loading state */}
+          {isMobile && isLoading && (
+            <div className="flex items-center gap-1 text-xs text-blue-600 dark:text-blue-400">
+              <div className="w-3 h-3 border border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+              <span>Saving...</span>
+            </div>
+          )}
+
+          {/* Desktop: empty space when not loading */}
+          {!isMobile && !isLoading && <div></div>}
+
+          {/* Desktop: loading indicator */}
+          {!isMobile && isLoading && (
+            <div className="flex items-center gap-2 text-xs text-blue-600 dark:text-blue-400">
+              <div className="w-3 h-3 border border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+              <span>Saving...</span>
+            </div>
+          )}
+
+          {/* Action buttons */}
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={onCancel}
+              disabled={isLoading}
+              className={cn(
+                "px-3 py-1.5 text-xs font-medium text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200",
+                "border border-gray-200 dark:border-gray-700 rounded-md hover:bg-gray-50 dark:hover:bg-gray-800",
+                "disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              )}
+            >
+              Cancel
+            </button>
+
+            <button
+              type="submit"
+              disabled={!editContent.trim() || isLoading}
+              className={cn(
+                "px-3 py-1.5 text-xs font-medium text-white rounded-md transition-colors",
+                "bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed",
+                "flex items-center gap-1"
+              )}
+            >
+              {isLoading ? (
+                <>
+                  <div className="w-3 h-3 border border-white border-t-transparent rounded-full animate-spin"></div>
+                  {!isMobile && <span>Save</span>}
+                </>
+              ) : (
+                <>
+                  <Send className="w-3 h-3" />
+                  {!isMobile && <span>Save</span>}
+                </>
+              )}
+            </button>
+          </div>
         </div>
       </form>
-
-      <p
-        className={cn(
-          "text-gray-500 dark:text-gray-400",
-          isMobile ? "text-xs" : "text-sm"
-        )}
-      >
-        <strong>Tip:</strong> Press Enter to send, Shift+Enter for new line,
-        Escape to cancel
-      </p>
     </div>
   );
 };
-
 // ============================================================================
 // SIDE PANEL HEADER COMPONENT
 // ============================================================================
@@ -550,7 +579,7 @@ const TopBar = ({
               <span
                 className={`font-medium ${isMobile ? "text-xs" : "text-sm"}`}
               >
-                {isMobile ? "Panel" : "Generate Panel Manually"}
+                {isMobile ? "Panels" : "Panels"}
               </span>
             </div>
           </Button>
@@ -593,7 +622,7 @@ const EmptyMessagesState = ({
           >
             Welcome to Manga AI Studio
           </h3>
-          <div className="text-gray-600 dark:text-gray-400 max-w-md mx-auto space-y-2">
+          <div className="text-gray-600 dark:text-gray-400 max-w-md mx-auto">
             <p>
               Start creating your manga by describing what you want to build.
             </p>
@@ -876,131 +905,155 @@ const ChatMessageComponent = ({
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
-      className={cn(
-        "flex gap-4 group",
-        message.role === "user" ? "justify-end" : "justify-start"
-      )}
+      className="w-full px-4 py-4 group hover:bg-gray-50/50 dark:hover:bg-gray-800/30 transition-all duration-200"
     >
-      {message.role === "assistant" && (
+      <div className="max-w-full mx-auto">
         <div
           className={cn(
-            "w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0",
-            isError
-              ? "bg-gradient-to-r from-red-500 to-red-600"
-              : "bg-gradient-to-r from-blue-500 to-purple-600"
+            "flex flex-col",
+            message.role === "user" ? "items-end" : "items-start"
           )}
         >
-          {isError ? (
-            <AlertCircle className="w-4 h-4 text-white" />
-          ) : (
-            <Bot className="w-4 h-4 text-white" />
-          )}
-        </div>
-      )}
-
-      <div
-        className={cn(
-          "max-w-2xl rounded-2xl px-4 py-3 relative shadow-sm",
-          message.role === "user"
-            ? "bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-blue-200/50 dark:shadow-blue-900/50"
-            : isError
-            ? "bg-gradient-to-r from-red-50 to-red-100 dark:from-red-900/20 dark:to-red-800/20 text-red-900 dark:text-red-100 border border-red-200/50 dark:border-red-700/50"
-            : "bg-gradient-to-r from-white to-gray-50 dark:from-gray-800 dark:to-gray-750 text-gray-900 dark:text-gray-100 border border-gray-200/50 dark:border-gray-700/50 shadow-gray-200/50 dark:shadow-gray-800/50"
-        )}
-      >
-        {/* Speech bubble tails */}
-        {message.role === "assistant" && (
-          <div
-            className={cn(
-              "absolute -left-2 top-4 w-0 h-0 border-t-4 border-b-4 border-r-8 border-transparent",
-              isError
-                ? "border-r-red-50 dark:border-r-red-900/20"
-                : "border-r-white dark:border-r-gray-800"
-            )}
-          />
-        )}
-        {message.role === "user" && (
-          <div className="absolute -right-2 top-4 w-0 h-0 border-t-4 border-b-4 border-l-8 border-transparent border-l-blue-600" />
-        )}
-
-        {/* Show edit component if editing, otherwise show message content */}
-        {isEditing && editingMessage && onSubmitEdit && onCancelEdit ? (
-          <EditMessageComponent
-            messageId={editingMessage.messageId!}
-            originalContent={editingMessage.originalContent}
-            isLoading={editingMessage.isLoading}
-            onSubmit={onSubmitEdit}
-            onCancel={onCancelEdit}
-          />
-        ) : (
-          <>
-            {/* General file/image preview */}
-            <ChatMessagePreview
-              message={message}
-              onPreviewImage={onPreviewImage}
-            />
-            {message.content && (
-              <div className="break-words text-sm max-w-none dark:text-gray-100 mt-2">
-                <UltimateMarkdownRenderer
-                  content={message.content}
-                  showToc={false}
-                />
-              </div>
-            )}
-
-            {/* Retry button for error messages */}
-            {isError && onRetry && message.metadata?.retryMessageId && (
-              <div className="mt-3 pt-3 border-t border-red-200 dark:border-red-700">
-                <motion.button
-                  onClick={() => onRetry(message.metadata!.retryMessageId!)}
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  className="flex items-center gap-2 px-3 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-medium transition-colors"
-                >
-                  <RotateCcw className="w-4 h-4" />
-                  Retry Message
-                </motion.button>
-              </div>
-            )}
-          </>
-        )}
-
-        {/* Message Actions - Outside the bubble, below the message */}
-        {!isEditing && (
-          <div
-            className={cn(
-              "mt-2 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity",
-              message.role === "user" ? "justify-end" : "justify-start"
-            )}
-          >
-            <button
-              onClick={() => onCopy(message.content)}
-              className="p-1.5 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors flex items-center gap-1 text-xs text-gray-600 dark:text-gray-400"
-              title="Copy message"
+          {/* Avatar positioned above message */}
+          <div className="mb-2">
+            <div
+              className={cn(
+                "w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 shadow-lg",
+                message.role === "user"
+                  ? "bg-gradient-to-br from-emerald-500 to-teal-600"
+                  : isError
+                  ? "bg-gradient-to-br from-red-500 to-rose-600"
+                  : "bg-gradient-to-br from-violet-500 to-purple-600"
+              )}
             >
-              <Copy className="w-3 h-3" />
-              <span>Copy</span>
-            </button>
-            {/* Only show edit for user messages */}
-            {onEdit && message.role === "user" && (
-              <button
-                onClick={() => onEdit(message.id || message._id || "")}
-                className="p-1.5 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900 transition-colors flex items-center gap-1 text-xs text-blue-600 dark:text-blue-400"
-                title="Edit message"
+              {message.role === "user" ? (
+                <User className="w-5 h-5 text-white" />
+              ) : isError ? (
+                <AlertCircle className="w-5 h-5 text-white" />
+              ) : (
+                <Bot className="w-5 h-5 text-white" />
+              )}
+            </div>
+          </div>
+
+          {/* Message Container */}
+          <div className="w-full">
+            {/* Message Header */}
+            <div
+              className={cn(
+                "flex items-center gap-2",
+                message.role === "user" ? "justify-end" : "justify-start"
+              )}
+            >
+              <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+                {message.role === "user"
+                  ? "You"
+                  : isError
+                  ? "Error"
+                  : "Assistant"}
+              </span>
+              <div className="w-1 h-1 rounded-full bg-gray-400 dark:bg-gray-500" />
+              <span className="text-xs text-gray-500 dark:text-gray-400">
+                {new Date().toLocaleTimeString([], {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })}
+              </span>
+            </div>
+
+            {/* Message Bubble */}
+            <div
+              className={cn(
+                "relative rounded-2xl px-6 shadow-sm backdrop-blur-sm border",
+                message.role === "user"
+                  ? "bg-gradient-to-br from-emerald-500 to-teal-600 text-white border-emerald-200 dark:border-emerald-700 shadow-emerald-200/20 dark:shadow-emerald-900/20"
+                  : isError
+                  ? "bg-gradient-to-br from-red-50 to-rose-50 dark:from-red-900/20 dark:to-rose-900/20 text-red-900 dark:text-red-100 border-red-200 dark:border-red-700 shadow-red-200/20 dark:shadow-red-900/20"
+                  : "bg-white/80 dark:bg-gray-800/80 text-gray-900 dark:text-gray-100 border-gray-200 dark:border-gray-700 shadow-gray-200/30 dark:shadow-gray-800/30"
+              )}
+            >
+              {/* Show edit component if editing, otherwise show message content */}
+              {isEditing && editingMessage && onSubmitEdit && onCancelEdit ? (
+                <EditMessageComponent
+                  messageId={editingMessage.messageId!}
+                  originalContent={editingMessage.originalContent}
+                  isLoading={editingMessage.isLoading}
+                  onSubmit={onSubmitEdit}
+                  onCancel={onCancelEdit}
+                />
+              ) : (
+                <>
+                  {/* General file/image preview */}
+                  <ChatMessagePreview
+                    message={message}
+                    onPreviewImage={onPreviewImage}
+                  />
+                  {message.content && (
+                    <div className="break-words text-sm leading-relaxed">
+                      <UltimateMarkdownRenderer
+                        content={message.content}
+                        showToc={false}
+                      />
+                    </div>
+                  )}
+
+                  {/* Retry button for error messages */}
+                  {isError && onRetry && message.metadata?.retryMessageId && (
+                    <div className="mt-4 pt-4 border-t border-red-200 dark:border-red-700">
+                      <motion.button
+                        onClick={() =>
+                          onRetry(message.metadata!.retryMessageId!)
+                        }
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white rounded-xl text-sm font-medium transition-all duration-200 shadow-lg hover:shadow-xl"
+                      >
+                        <RotateCcw className="w-4 h-4" />
+                        Retry Message
+                      </motion.button>
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+
+            {/* Message Actions - Always visible, positioned below the bubble */}
+            {!isEditing && (
+              <div
+                className={cn(
+                  "mt-3 flex gap-2",
+                  message.role === "user" ? "justify-end" : "justify-start"
+                )}
               >
-                <Edit2 className="w-3 h-3" />
-                <span>Edit</span>
-              </button>
+                <motion.button
+                  onClick={() => onCopy(message.content)}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="flex items-center gap-2 px-3 py-2 bg-white/80 dark:bg-gray-800/80 hover:bg-white dark:hover:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-xs font-medium text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 transition-all duration-200 shadow-sm hover:shadow-md backdrop-blur-sm"
+                  title="Copy message"
+                >
+                  <Copy className="w-3.5 h-3.5" />
+                  <span>Copy</span>
+                </motion.button>
+
+                {/* Only show edit for user messages */}
+                {onEdit && message.role === "user" && (
+                  <motion.button
+                    onClick={() => onEdit(message.id || message._id || "")}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    className="flex items-center gap-2 px-3 py-2 bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-900/20 dark:to-teal-900/20 hover:from-emerald-100 hover:to-teal-100 dark:hover:from-emerald-900/30 dark:hover:to-teal-900/30 border border-emerald-200 dark:border-emerald-700 rounded-lg text-xs font-medium text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 transition-all duration-200 shadow-sm hover:shadow-md backdrop-blur-sm"
+                    title="Edit message"
+                  >
+                    <Edit2 className="w-3.5 h-3.5" />
+                    <span>Edit</span>
+                  </motion.button>
+                )}
+              </div>
             )}
           </div>
-        )}
-      </div>
-
-      {message.role === "user" && (
-        <div className="w-8 h-8 rounded-full bg-gray-300 dark:bg-gray-600 flex items-center justify-center flex-shrink-0">
-          <User className="w-4 h-4 text-gray-600 dark:text-gray-400" />
         </div>
-      )}
+      </div>
     </motion.div>
   );
 };
