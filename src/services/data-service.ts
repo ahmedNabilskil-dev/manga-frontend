@@ -231,7 +231,11 @@ export async function getChapterForContext(
   id: string
 ): Promise<Chapter | null> {
   try {
-    return await apiRequest.get<Chapter>(`/manga/chapters/${id}`);
+    const response = await apiRequest.get<{
+      success: boolean;
+      data: Chapter;
+    }>(`/manga/chapters/${id}`);
+    return response.data;
   } catch (error: any) {
     if (error.response?.status === 404) return null;
     console.error("Get chapter error:", error);
@@ -299,7 +303,11 @@ export async function deleteScene(id: string): Promise<void> {
 
 export async function getSceneForContext(id: string): Promise<Scene | null> {
   try {
-    return await apiRequest.get<Scene>(`/manga/scenes/${id}`);
+    const response = await apiRequest.get<{
+      success: boolean;
+      data: Scene;
+    }>(`/manga/scenes/${id}`);
+    return response.data;
   } catch (error: any) {
     if (error.response?.status === 404) return null;
     console.error("Get scene error:", error);
@@ -419,7 +427,11 @@ export async function removeCharacterFromPanel(
 
 export async function getPanelForContext(id: string): Promise<Panel | null> {
   try {
-    return await apiRequest.get<Panel>(`/manga/panels/${id}`);
+    const response = await apiRequest.get<{
+      success: boolean;
+      data: Panel;
+    }>(`/manga/panels/${id}`);
+    return response.data;
   } catch (error: any) {
     if (error.response?.status === 404) return null;
     console.error("Get panel error:", error);
@@ -516,7 +528,11 @@ export async function listPanelDialogues(
 // --- Character Methods ---
 export async function getCharacter(id: string): Promise<Character | null> {
   try {
-    return await apiRequest.get<Character>(`/manga/characters/${id}`);
+    const response = await apiRequest.get<{
+      success: boolean;
+      data: Character;
+    }>(`/manga/characters/${id}`);
+    return response.data;
   } catch (error: any) {
     if (error.response?.status === 404) return null;
     console.error("Get character error:", error);
@@ -672,9 +688,11 @@ export async function getCharacterOutfitTemplate(
   id: string
 ): Promise<CharacterOutfitTemplate | null> {
   try {
-    return await apiRequest.get<CharacterOutfitTemplate>(
-      `/manga/outfit-templates/${id}`
-    );
+    const response = await apiRequest.get<{
+      success: boolean;
+      data: CharacterOutfitTemplate;
+    }>(`/manga/outfit-templates/${id}`);
+    return response.data;
   } catch (error: any) {
     if (error.response?.status === 404) return null;
     console.error("Get outfit template error:", error);
@@ -762,9 +780,11 @@ export async function getLocationTemplate(
   id: string
 ): Promise<LocationTemplate | null> {
   try {
-    return await apiRequest.get<LocationTemplate>(
-      `/manga/location-templates/${id}`
-    );
+    const response = await apiRequest.get<{
+      success: boolean;
+      data: LocationTemplate;
+    }>(`/manga/location-templates/${id}`);
+    return response.data;
   } catch (error: any) {
     if (error.response?.status === 404) return null;
     console.error("Get location template error:", error);
