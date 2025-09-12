@@ -1294,50 +1294,63 @@ export const CanvasEditor: React.FC<CanvasEditorProps> = ({
           ctx.textAlign = "center";
           ctx.textBaseline = "middle";
 
-          // Text positioning (same logic as before)
+          // Text positioning with vertical flip handling
           const getTextArea = () => {
             const bubbleX = config.x || 0;
             const bubbleY = config.y || 0;
             const bubbleWidth = config.width || 160;
             const bubbleHeight = config.height || 100;
+            const isFlippedY = config.flipY;
 
+            let textConfig;
             switch (bubble.bubbleType) {
               case "normal":
-                return {
+                textConfig = {
                   x: bubbleX + bubbleWidth * 0.5,
-                  y: bubbleY + bubbleHeight * 0.45,
+                  yOffset: isFlippedY ? 0.55 : 0.45, // Flip from 45% to 55% (mirror position)
                   maxWidth: bubbleWidth * 0.8,
                   maxHeight: bubbleHeight * 0.6,
                 };
+                break;
               case "thought":
-                return {
+                textConfig = {
                   x: bubbleX + bubbleWidth * 0.52,
-                  y: bubbleY + bubbleHeight * 0.4,
+                  yOffset: isFlippedY ? 0.6 : 0.4, // Flip from 40% to 60%
                   maxWidth: bubbleWidth * 0.7,
                   maxHeight: bubbleHeight * 0.6,
                 };
+                break;
               case "scream":
-                return {
+                textConfig = {
                   x: bubbleX + bubbleWidth * 0.5,
-                  y: bubbleY + bubbleHeight * 0.5,
+                  yOffset: 0.5, // Center position doesn't change
                   maxWidth: bubbleWidth * 0.7,
                   maxHeight: bubbleHeight * 0.5,
                 };
+                break;
               case "narration":
-                return {
+                textConfig = {
                   x: bubbleX + bubbleWidth * 0.5,
-                  y: bubbleY + bubbleHeight * 0.37,
+                  yOffset: isFlippedY ? 0.63 : 0.37, // Flip from 37% to 63%
                   maxWidth: bubbleWidth * 0.9,
                   maxHeight: bubbleHeight * 0.7,
                 };
+                break;
               default:
-                return {
+                textConfig = {
                   x: bubbleX + bubbleWidth * 0.5,
-                  y: bubbleY + bubbleHeight * 0.45,
+                  yOffset: isFlippedY ? 0.55 : 0.45,
                   maxWidth: bubbleWidth * 0.8,
                   maxHeight: bubbleHeight * 0.6,
                 };
             }
+
+            return {
+              x: textConfig.x,
+              y: bubbleY + bubbleHeight * textConfig.yOffset,
+              maxWidth: textConfig.maxWidth,
+              maxHeight: textConfig.maxHeight,
+            };
           };
 
           const textArea = getTextArea();
