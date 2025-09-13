@@ -112,13 +112,15 @@ const PanelCard = memo<PanelCardProps>(
             </div>
 
             <div className="flex gap-1 sm:gap-2">
-              <button
-                onClick={() => setIsCanvasEditorOpen(true)}
-                className="p-2 bg-purple-600/20 hover:bg-purple-600/30 text-purple-300 rounded-lg transition-colors"
-                title="Open Canvas Editor"
-              >
-                <Palette className="w-4 h-4" />
-              </button>
+              {panel?.imgUrl && (
+                <button
+                  onClick={() => setIsCanvasEditorOpen(true)}
+                  className="p-2 bg-purple-600/20 hover:bg-purple-600/30 text-purple-300 rounded-lg transition-colors"
+                  title="Open Canvas Editor"
+                >
+                  <Palette className="w-4 h-4" />
+                </button>
+              )}
               <button
                 onClick={() => onEdit(panel)}
                 className="p-2 bg-gray-700/50 hover:bg-gray-700 rounded-lg transition-colors"
