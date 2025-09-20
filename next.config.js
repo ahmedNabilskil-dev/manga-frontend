@@ -1,5 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Enable standalone output for easier Electron packaging
+  output: 'standalone',
+  
   // Your existing Next.js config options here...
   images: {
     domains: [

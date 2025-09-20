@@ -1,4 +1,5 @@
 "use client";
+import { BackToProjectsButton } from "@/components/ui/back-to-projects-button";
 import { Chapter } from "@/types/entities";
 import {
   BookOpen,
@@ -81,8 +82,13 @@ const Header: React.FC<HeaderProps> = ({
           <div className="max-w-7xl mx-auto px-6 py-4">
             {/* Top Row - Main Navigation */}
             <div className="flex items-center justify-between mb-4">
-              {/* Logo & Title */}
+              {/* Back Button + Logo & Title */}
               <div className="flex items-center gap-3">
+                <BackToProjectsButton
+                  variant="manga-icon"
+                  size="md"
+                  title="Back to Projects"
+                />
                 <div className={`p-2 rounded-xl ${accentBg}`}>
                   <BookOpen className={accentColor} size={20} />
                 </div>
@@ -265,12 +271,19 @@ const Header: React.FC<HeaderProps> = ({
 
           {/* Navigation Row */}
           <div className="flex items-center justify-between">
-            <button
-              onClick={() => setIsMobileMenuOpen(true)}
-              className={`${cardBg} border p-2 rounded-lg transition-all duration-200 hover:scale-105`}
-            >
-              <Menu className={primaryText} size={18} />
-            </button>
+            <div className="flex items-center gap-2">
+              <BackToProjectsButton
+                variant="icon"
+                size="sm"
+                title="Back to Projects"
+              />
+              <button
+                onClick={() => setIsMobileMenuOpen(true)}
+                className={`${cardBg} border p-2 rounded-lg transition-all duration-200 hover:scale-105`}
+              >
+                <Menu className={primaryText} size={18} />
+              </button>
+            </div>
 
             <div className="flex-1 text-center px-3">
               <h1

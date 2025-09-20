@@ -471,6 +471,7 @@ const SidePanel = ({
 // TOP BAR COMPONENT
 // ============================================================================
 
+import { BackToProjectsButton } from "@/components/ui/back-to-projects-button";
 import { getProjectWithRelations } from "@/services/data-service";
 import { MangaProject } from "@/types/entities";
 import { ReactNode } from "react";
@@ -507,6 +508,11 @@ const TopBar = ({
     >
       <div className="flex items-center gap-4">
         {children}
+        <BackToProjectsButton
+          variant="icon"
+          size={isMobile ? "sm" : "md"}
+          title="Back to Projects"
+        />
         {!sidePanel.isOpen && (
           <motion.button
             whileHover={{ scale: 1.05 }}

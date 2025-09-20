@@ -1,3 +1,4 @@
+import { BackendStatusNotification } from "@/components/electron";
 import { ConditionalTopNavigation } from "@/components/layout/conditional-top-navigation";
 import { AuthProvider } from "@/components/providers/auth-provider";
 import { ReactQueryProvider } from "@/components/providers/react-query-provider";
@@ -70,6 +71,7 @@ export default function RootLayout({
               richColors
               closeButton
             />
+            <BackendStatusNotification />
           </ReactQueryProvider>
         </ThemeProvider>
       </body>
